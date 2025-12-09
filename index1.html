@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首爾五日遊行程表 v2.0</title>
+    <!-- 引入 React 與 Tailwind -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 簡單的圖標定義 -->
+    <script>
+        const icons = {
+            sun: "M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z",
+            mapPin: "M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
+            clock: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M12 6v6l4 2",
+            dollarSign: "M12 1v22 M17 5H9.5a3.5 3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
+            info: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M12 16v-4 M12 8h.01",
+            coffee: "M18 8h1a4 4 0 0 1 0 8h-1 M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z M6 1v3 M10 1v3 M14 1v3",
+            train: "M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM10 0v2 M12 10l0 0M8 15h8M10 20l-3 3M14 20l3 3",
+            camera: "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+            shoppingBag: "M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z M3 6h18 M16 10a4 4 0 0 1-8 0",
+            chevronDown: "M6 9l6 6 6-6",
+            chevronUp: "M18 15l-6-6-6 6",
+            externalLink: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6 M15 3h6v6 M10 14L21 3",
+            calculator: "M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm2 4h8v2H8V6zm0 4h2v2H8v-2zm4 0h2v2h-2v-2zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2z",
+            x: "M18 6L6 18M6 6l12 12"
+        };
+        
+        const Icon = ({ name, className }) => {
+            const path = icons[name] || "";
+            return React.createElement('svg', {
+                xmlns: "http://www.w3.org/2000/svg",
+                width: "24",
+                height: "24",
+                viewBox: "0 0 24 24",
+                fill: "none",
+                stroke: "currentColor",
+                strokeWidth: "2",
+                strokeLinecap: "round",
+                strokeLinejoin: "round",
+                className: className
+            }, React.createElement('path', { d: path }));
+        };
+    </script>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // 匯率計算器組件
+        const CurrencyConverter = () => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [rate, setRate] = useState(42.5); // 預設匯率 1 TWD = 42.5 KRW
+            const [krw, setKrw] = useState("");
+            const [twd, setTwd] = useState("");
+
+            const handleKrwChange = (val) => {
+                setKrw(val);
+                if(val && !isNaN(val)) {
+                    setTwd((parseFloat(val) / rate).toFixed(0));
+                } else {
+                    setTwd("");
+                }
+            };
+
+            const handleRateChange = (val) => {
+                setRate(val);
+                if(krw && !isNaN(krw)) {
+                    setTwd((parseFloat(krw) / val).toFixed(0));
+                }
+            };
+
+            return (
+                <div className="fixed bottom-4 right-4 z-50">
+                    {!isOpen && (
+                        <button 
+                            onClick={() => setIsOpen(true)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105"
+                        >
+                            <Icon name="calculator" className="w-6 h-6" />
+                        </button>
+                    )}
+
+                    {isOpen && (
+                        <div className="bg-white rounded-xl shadow-2xl p-4 w-72 border border-gray-200 animate-fade-in-up">
+                            <div className="flex justify-between items-center mb-3 border-b pb-2">
+                                <h3 className="font-bold text-gray-800 flex items-center">
+                                    <Icon name="dollarSign" className="w-4 h-4 mr-1 text-green-600"/> 匯率換算
+                                </h3>
+                                <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                    <Icon name="x" className="w-5 h-5"/>
+                                </button>
+                            </div>
+                            
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="text-xs text-gray-500 mb-1 block">韓元 (KRW)</label>
+                                    <input 
+                                        type="number" 
+                                        value={krw}
+                                        onChange={(e) => handleKrwChange(e.target.value)}
+                                        placeholder="輸入韓元金額"
+                                        className="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    />
+                                </div>
+                                <div className="flex justify-center text-gray-400">
+                                    ↓
+                                </div>
+                                <div>
+                                    <label className="text-xs text-gray-500 mb-1 block">台幣 (TWD) <span className="text-[10px] ml-1">(匯率約 {rate})</span></label>
+                                    <input 
+                                        type="text" 
+                                        value={twd}
+                                        readOnly
+                                        className="w-full p-2 border rounded-lg bg-blue-50 font-bold text-blue-800"
+                                    />
+                                </div>
+                                <div className="pt-2 border-t mt-2">
+                                    <label className="text-[10px] text-gray-400 block mb-1">設定匯率 (1 TWD 換多少 KRW)</label>
+                                    <input 
+                                        type="number" 
+                                        value={rate}
+                                        onChange={(e) => handleRateChange(e.target.value)}
+                                        className="w-full p-1 text-xs border rounded text-center text-gray-500"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const SeoulTripPlanner = () => {
+            const [activeDay, setActiveDay] = useState(1);
+            const [expandedEvent, setExpandedEvent] = useState(null);
+
+            // 旅遊數據資料 - 新增 mapKeyword 用於精準導航
+            const itineraryData = [
+                {
+                day: 1,
+                title: "抵達首爾 & 明洞初體驗",
+                weather: "晴時多雲 25°C",
+                summary: "適應環境，換錢，享受首爾塔夜景。",
+                events: [
+                    {
+                    id: "d1-1",
+                    time: "14:00",
+                    endTime: "16:00",
+                    activity: "抵達仁川機場 (ICN)",
+                    location: "仁川國際機場",
+                    mapKeyword: "Incheon International Airport Terminal 1",
+                    cost: "AREX 直達車約 9,500 KRW",
+                    duration: "2 小時",
+                    type: "transport",
+                    description: "領取行李、購買 WOWPASS 或 T-Money 卡。搭乘 AREX 機場快線直達首爾站 (約 43 分鐘)。",
+                    tips: "建議事先在網路上預訂 AREX 車票會有優惠。"
+                    },
+                    {
+                    id: "d1-2",
+                    time: "16:30",
+                    endTime: "17:30",
+                    activity: "飯店 Check-in",
+                    location: "明洞/弘大 (假設住宿點)",
+                    mapKeyword: "Myeongdong Station", 
+                    cost: "0 KRW",
+                    duration: "1 小時",
+                    type: "rest",
+                    description: "放置行李，整理隨身物品。此連結目前導航至明洞站，請依實際住宿修改。",
+                    tips: "檢查轉接頭是否適用 (韓國為兩孔圓形插座)。"
+                    },
+                    {
+                    id: "d1-3",
+                    time: "18:00",
+                    endTime: "19:30",
+                    activity: "明洞換錢 & 街頭美食",
+                    location: "明洞大使館換錢所",
+                    mapKeyword: "Myeongdong Chinese Embassy Money Exchange",
+                    cost: "約 20,000 KRW (餐費)",
+                    duration: "1.5 小時",
+                    type: "food",
+                    description: "前往大使館前或一品香換錢所兌換韓元。晚餐享用明洞餃子或路邊攤小吃。",
+                    tips: "大部分路邊攤現已收現金或轉帳，準備些現金較方便。"
+                    },
+                    {
+                    id: "d1-4",
+                    time: "20:00",
+                    endTime: "22:00",
+                    activity: "N首爾塔 (南山塔) 夜景",
+                    location: "南山纜車搭乘處",
+                    mapKeyword: "Namsan Cable Car Station",
+                    cost: "纜車往返 14,000 KRW",
+                    duration: "2 小時",
+                    type: "sightseeing",
+                    description: "首爾的地標，可俯瞰整個城市的絕美夜景。也是著名的愛情鎖牆所在地。",
+                    tips: "建議搭乘南山纜車上山，若人多可改搭 01 號循環公車。"
+                    }
+                ]
+                },
+                {
+                day: 2,
+                title: "穿越古今：韓服與傳統文化",
+                weather: "晴朗 26°C",
+                summary: "穿著韓服漫步宮殿，體驗北村傳統韓屋。",
+                events: [
+                    {
+                    id: "d2-1",
+                    time: "09:30",
+                    endTime: "10:30",
+                    activity: "租借韓服",
+                    location: "景福宮周邊",
+                    mapKeyword: "Gyeongbokgung Hanbok Rental",
+                    cost: "約 20,000 KRW",
+                    duration: "1 小時",
+                    type: "activity",
+                    description: "挑選喜歡的韓服並做髮型設計。穿著韓服進入景福宮免門票。",
+                    tips: "建議事先網上預約知名店家以避免排隊。"
+                    },
+                    {
+                    id: "d2-2",
+                    time: "10:30",
+                    endTime: "12:30",
+                    activity: "景福宮 (光化門)",
+                    location: "景福宮",
+                    mapKeyword: "Gyeongbokgung Palace",
+                    cost: "0 KRW (穿韓服免費)",
+                    duration: "2 小時",
+                    type: "sightseeing",
+                    description: "朝鮮王朝最大的宮殿。必看勤政殿與慶會樓。10:00 有守門將換崗儀式。",
+                    tips: "注意：景福宮每週二公休。"
+                    },
+                    {
+                    id: "d2-3",
+                    time: "12:30",
+                    endTime: "14:00",
+                    activity: "午餐：土俗村蔘雞湯",
+                    location: "土俗村蔘雞湯",
+                    mapKeyword: "Tosokchon Samgyetang",
+                    cost: "約 20,000 KRW",
+                    duration: "1.5 小時",
+                    type: "food",
+                    description: "首爾最著名的蔘雞湯，湯頭濃郁，能補充體力。",
+                    tips: "午餐時間人潮眾多，建議稍微提早或晚點到。"
+                    },
+                    {
+                    id: "d2-4",
+                    time: "14:30",
+                    endTime: "16:30",
+                    activity: "北村韓屋村",
+                    location: "北村韓屋村",
+                    mapKeyword: "Bukchon Hanok Village",
+                    cost: "0 KRW",
+                    duration: "2 小時",
+                    type: "sightseeing",
+                    description: "保存完整的傳統韓屋居住區，非常適合拍照。",
+                    tips: "這裡是居民區，參觀時請保持安靜。"
+                    },
+                    {
+                    id: "d2-5",
+                    time: "17:00",
+                    endTime: "19:00",
+                    activity: "仁寺洞 & Ssamzigil",
+                    location: "仁寺洞 Ssamzigil",
+                    mapKeyword: "Ssamzigil",
+                    cost: "視購物而定",
+                    duration: "2 小時",
+                    type: "shopping",
+                    description: "充滿傳統工藝品、茶館的街道。必逛 Ssamzigil 文創商場。",
+                    tips: "推薦嘗試傳統茶屋的五味子茶。"
+                    }
+                ]
+                },
+                {
+                day: 3,
+                title: "近郊一日遊：南怡島",
+                weather: "多雲 24°C",
+                summary: "遠離市區塵囂，享受自然風光。",
+                events: [
+                    {
+                    id: "d3-1",
+                    time: "08:00",
+                    endTime: "10:00",
+                    activity: "搭乘 ITX 前往加平",
+                    location: "龍山站 / 清涼里站",
+                    mapKeyword: "Yongsan Station",
+                    cost: "ITX 約 9,800 KRW",
+                    duration: "2 小時",
+                    type: "transport",
+                    description: "搭乘 ITX-青春號前往加平站 (Gapyeong)，轉乘循環巴士或計程車至碼頭。",
+                    tips: "務必提前一週在 Let's Korail 官網預訂車票。"
+                    },
+                    {
+                    id: "d3-2",
+                    time: "10:30",
+                    endTime: "13:30",
+                    activity: "南怡島 (Nami Island)",
+                    location: "南怡島碼頭",
+                    mapKeyword: "Nami Island Ferry Dock",
+                    cost: "門票 16,000 KRW",
+                    duration: "3 小時",
+                    type: "sightseeing",
+                    description: "冬季戀歌拍攝地。島上環境清幽，可租腳踏車環島。",
+                    tips: "若膽子大，可選擇「高空飛索」滑進島內。"
+                    },
+                    {
+                    id: "d3-3",
+                    time: "13:30",
+                    endTime: "14:30",
+                    activity: "午餐：春川辣炒雞排",
+                    location: "加平碼頭周邊",
+                    mapKeyword: "Gapyeong Dakgalbi",
+                    cost: "約 15,000 KRW",
+                    duration: "1 小時",
+                    type: "food",
+                    description: "加平地區的特色美食，鐵板辣炒雞肉與年糕。",
+                    tips: "通常最後可以加點炒飯。"
+                    },
+                    {
+                    id: "d3-4",
+                    time: "15:30",
+                    endTime: "17:30",
+                    activity: "晨靜樹木園",
+                    location: "晨靜樹木園",
+                    mapKeyword: "The Garden of Morning Calm",
+                    cost: "門票 11,000 KRW",
+                    duration: "2 小時",
+                    type: "sightseeing",
+                    description: "被群山環抱的廣大庭園，種植數千種花卉。",
+                    tips: "從南怡島搭乘加平觀光循環巴士即可到達。"
+                    },
+                    {
+                    id: "d3-5",
+                    time: "18:00",
+                    endTime: "20:00",
+                    activity: "返回首爾",
+                    location: "加平站",
+                    mapKeyword: "Gapyeong Station",
+                    cost: "ITX 或 地鐵",
+                    duration: "2 小時",
+                    type: "transport",
+                    description: "結束一天行程返回市區。",
+                    tips: "回程火車也建議預先買好。"
+                    }
+                ]
+                },
+                {
+                day: 4,
+                title: "江南Style：現代首爾",
+                weather: "晴朗 27°C",
+                summary: "體驗首爾現代化的一面，購物與圖書館。",
+                events: [
+                    {
+                    id: "d4-1",
+                    time: "10:00",
+                    endTime: "12:00",
+                    activity: "星空圖書館",
+                    location: "COEX Mall",
+                    mapKeyword: "Starfield Library",
+                    cost: "免費",
+                    duration: "2 小時",
+                    type: "sightseeing",
+                    description: "巨型書架圖書館，非常壯觀，打卡聖地。",
+                    tips: "位於 COEX 商場中央。"
+                    },
+                    {
+                    id: "d4-2",
+                    time: "12:30",
+                    endTime: "14:00",
+                    activity: "午餐 & 新沙洞林蔭道",
+                    location: "新沙洞林蔭道",
+                    mapKeyword: "Sinsadong Garosu-gil",
+                    cost: "約 25,000 KRW",
+                    duration: "1.5 小時",
+                    type: "food",
+                    description: "充滿設計感的街道，有許多網美咖啡廳與設計師品牌。",
+                    tips: "推薦探訪巷弄內的特色甜點店。"
+                    },
+                    {
+                    id: "d4-3",
+                    time: "14:30",
+                    endTime: "17:00",
+                    activity: "高速巴士地下街 (GoTo Mall)",
+                    location: "高速巴士客運站",
+                    mapKeyword: "Goto Mall",
+                    cost: "視購物而定",
+                    duration: "2.5 小時",
+                    type: "shopping",
+                    description: "首爾最大的地下購物中心，衣服價格非常便宜。",
+                    tips: "大部分店家收現金較優惠。"
+                    },
+                    {
+                    id: "d4-4",
+                    time: "17:30",
+                    endTime: "19:30",
+                    activity: "盤浦漢江公園 (彩虹噴泉)",
+                    location: "盤浦漢江公園",
+                    mapKeyword: "Banpo Hangang Park",
+                    cost: "免費",
+                    duration: "2 小時",
+                    type: "rest",
+                    description: "在漢江邊吃泡麵或野餐。欣賞世界最長的橋樑噴泉。",
+                    tips: "噴泉時間通常在晚上 7:30 後。"
+                    }
+                ]
+                },
+                {
+                day: 5,
+                title: "最後衝刺 & 快樂賦歸",
+                weather: "多雲 25°C",
+                summary: "購買伴手禮，打包回憶。",
+                events: [
+                    {
+                    id: "d5-1",
+                    time: "10:00",
+                    endTime: "12:00",
+                    activity: "弘大商圈",
+                    location: "弘大入口站",
+                    mapKeyword: "Hongik University Station",
+                    cost: "視購物而定",
+                    duration: "2 小時",
+                    type: "shopping",
+                    description: "充滿年輕活力的區域，有許多服飾店、文具店。",
+                    tips: "適合買襪子、手機殼等小物。"
+                    },
+                    {
+                    id: "d5-2",
+                    time: "12:30",
+                    endTime: "14:00",
+                    activity: "樂天超市 (Lotte Mart)",
+                    location: "首爾站",
+                    mapKeyword: "Lotte Mart Zettaplex Seoul Station",
+                    cost: "視購物而定",
+                    duration: "1.5 小時",
+                    type: "shopping",
+                    description: "採買零食、泡麵、海苔當伴手禮的最佳地點。",
+                    tips: "自備購物袋，可直接辦理退稅。"
+                    },
+                    {
+                    id: "d5-3",
+                    time: "14:30",
+                    endTime: "15:30",
+                    activity: "前往機場",
+                    location: "首爾站 -> 仁川機場",
+                    mapKeyword: "Seoul Station",
+                    cost: "AREX 9,500 KRW",
+                    duration: "1 小時",
+                    type: "transport",
+                    description: "搭乘機場快線前往機場。",
+                    tips: "建議起飛前 3 小時抵達機場。"
+                    },
+                    {
+                    id: "d5-4",
+                    time: "16:00",
+                    endTime: "18:00",
+                    activity: "免稅店取貨 & 登機",
+                    location: "仁川機場",
+                    mapKeyword: "Incheon International Airport",
+                    cost: "0 KRW",
+                    duration: "2 小時",
+                    type: "activity",
+                    description: "領取線上免稅店購買的商品，準備登機回家。",
+                    tips: "Happy Travel!"
+                    }
+                ]
+                }
+            ];
+
+            const handleToggleEvent = (id) => {
+                if (expandedEvent === id) {
+                setExpandedEvent(null);
+                } else {
+                setExpandedEvent(id);
+                }
+            };
+
+            const getIcon = (type) => {
+                switch (type) {
+                case 'food': return <Icon name="coffee" className="w-5 h-5 text-orange-500" />;
+                case 'transport': return <Icon name="train" className="w-5 h-5 text-blue-500" />;
+                case 'sightseeing': return <Icon name="camera" className="w-5 h-5 text-purple-500" />;
+                case 'shopping': return <Icon name="shoppingBag" className="w-5 h-5 text-pink-500" />;
+                default: return <Icon name="info" className="w-5 h-5 text-gray-500" />;
+                }
+            };
+
+            // 產生 Google Maps 連結的函式
+            const getMapLink = (keyword) => {
+                // 使用 Google Maps Search Query 格式
+                return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}`;
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-50 font-sans pb-10">
+                {/* 浮動匯率計算機 */}
+                <CurrencyConverter />
+
+                {/* Header */}
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 shadow-lg">
+                    <div className="max-w-3xl mx-auto">
+                    <h1 className="text-3xl font-bold mb-2">首爾 5 天 4 夜自由行</h1>
+                    <div className="flex items-center space-x-4 text-blue-100 text-sm">
+                        <span className="flex items-center"><Icon name="sun" className="w-4 h-4 mr-1"/> 預計日期：6月底</span>
+                        <span className="flex items-center"><Icon name="mapPin" className="w-4 h-4 mr-1"/> 目的地：韓國首爾</span>
+                    </div>
+                    <p className="mt-4 text-blue-50 opacity-90">
+                        點擊下方行程可查看詳情與導航。右下角有匯率計算機。
+                    </p>
+                    </div>
+                </div>
+
+                <div className="max-w-3xl mx-auto px-4 -mt-6">
+                    {/* Day Selector */}
+                    <div className="bg-white rounded-xl shadow-md p-2 flex overflow-x-auto gap-2 no-scrollbar mb-6">
+                    {itineraryData.map((dayData) => (
+                        <button
+                        key={dayData.day}
+                        onClick={() => setActiveDay(dayData.day)}
+                        className={`flex-1 min-w-[80px] py-3 px-2 rounded-lg text-center transition-all duration-200 ${
+                            activeDay === dayData.day
+                            ? 'bg-blue-600 text-white shadow-md font-bold'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                        >
+                        <div className="text-xs uppercase opacity-75">Day</div>
+                        <div className="text-xl">{dayData.day}</div>
+                        </button>
+                    ))}
+                    </div>
+
+                    {/* Current Day Info */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6">
+                    <div className="flex justify-between items-start mb-2">
+                        <h2 className="text-2xl font-bold text-gray-800">{itineraryData[activeDay - 1].title}</h2>
+                        <div className="flex items-center text-gray-500 bg-gray-100 px-3 py-1 rounded-full text-sm">
+                        <Icon name="sun" className="w-4 h-4 mr-2 text-yellow-500" />
+                        {itineraryData[activeDay - 1].weather}
+                        </div>
+                    </div>
+                    <p className="text-gray-600 leading-relaxed">{itineraryData[activeDay - 1].summary}</p>
+                    </div>
+
+                    {/* Timeline */}
+                    <div className="space-y-4">
+                    {itineraryData[activeDay - 1].events.map((event, index) => (
+                        <div 
+                        key={event.id} 
+                        className={`bg-white rounded-xl shadow-sm border transition-all duration-300 overflow-hidden ${
+                            expandedEvent === event.id ? 'border-blue-400 ring-2 ring-blue-50' : 'border-gray-200 hover:border-blue-200'
+                        }`}
+                        >
+                        <div 
+                            className="p-4 flex cursor-pointer"
+                            onClick={() => handleToggleEvent(event.id)}
+                        >
+                            {/* Time Column */}
+                            <div className="w-16 flex-shrink-0 flex flex-col items-center mr-4 border-r border-gray-100 pr-4">
+                            <span className="font-bold text-gray-800 text-sm">{event.time}</span>
+                            <span className="text-xs text-gray-400 my-1">|</span>
+                            <span className="text-gray-500 text-xs">{event.endTime}</span>
+                            </div>
+
+                            {/* Content Column */}
+                            <div className="flex-grow">
+                            <div className="flex justify-between items-center mb-1">
+                                <div className="flex items-center space-x-2">
+                                <span className="p-1.5 bg-gray-50 rounded-full">{getIcon(event.type)}</span>
+                                <h3 className="font-bold text-lg text-gray-800">{event.activity}</h3>
+                                </div>
+                                {expandedEvent === event.id ? <Icon name="chevronUp" className="w-5 h-5 text-gray-400"/> : <Icon name="chevronDown" className="w-5 h-5 text-gray-400"/>}
+                            </div>
+                            
+                            <div className="flex items-center text-sm text-gray-500 mt-1">
+                                <Icon name="mapPin" className="w-3 h-3 mr-1" />
+                                <span className="mr-3">{event.location}</span>
+                                <Icon name="clock" className="w-3 h-3 mr-1" />
+                                <span>{event.duration}</span>
+                            </div>
+                            </div>
+                        </div>
+
+                        {/* Expanded Details */}
+                        {expandedEvent === event.id && (
+                            <div className="px-4 pb-4 pt-0 bg-gray-50/50 border-t border-gray-100">
+                            <div className="pt-4 space-y-3">
+                                <p className="text-gray-700 leading-relaxed">
+                                {event.description}
+                                </p>
+                                
+                                {/* 導航按鈕區域 */}
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                    <a 
+                                        href={getMapLink(event.mapKeyword)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-200 transition-colors"
+                                    >
+                                        <Icon name="mapPin" className="w-4 h-4 mr-2" />
+                                        Google Maps 導航
+                                        <Icon name="externalLink" className="w-3 h-3 ml-2 opacity-50" />
+                                    </a>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                                <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">預估費用</span>
+                                    <div className="flex items-center text-green-600 font-medium">
+                                    <Icon name="dollarSign" className="w-4 h-4 mr-1" />
+                                    {event.cost}
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                    <span className="text-xs font-bold text-blue-400 uppercase tracking-wider block mb-1">旅遊小撇步</span>
+                                    <div className="flex items-start text-blue-800 text-sm">
+                                    <Icon name="info" className="w-4 h-4 mr-1.5 mt-0.5 flex-shrink-0" />
+                                    {event.tips}
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                            </div>
+                        )}
+                        </div>
+                    ))}
+                    </div>
+                </div>
+                
+                {/* Footer */}
+                <div className="text-center text-gray-400 text-sm mt-12 mb-6">
+                    <p>© 2026 Seoul Trip Plan. Created for Friends.</p>
+                </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SeoulTripPlanner />);
+    </script>
+</body>
+</html>
